@@ -1,7 +1,10 @@
 import shutil
-from random import randint
+import random
 from src._audioPlayer import *
-from src._snakeHandler import getPointsPerFood
+from src._scoreHandler import *
+from src._configHandler import gameConfigFileName
+import json
+import os
 
 __all__ = [
     "SCREEN_SIZE",
@@ -11,26 +14,37 @@ __all__ = [
 
 SCREEN_SIZE = (shutil.get_terminal_size().columns, shutil.get_terminal_size().lines)
 
-with open("highscore.txt", "r") as f:
-    highscore = int(f.read().strip())
-    del f
+highscore = getTopScore() if os.path.exists(gameConfigFileName) else 0
 
 class Food:
-    def __init__(self):
-        self.position = randint(3, SCREEN_SIZE[0]-3), randint(3, SCREEN_SIZE[1]-3)
+    def __init__(self, border_range: tuple):
+        self.border_range = border_range
+        self.allLocations = []
+        for xOffset in range(border_range["x"][0]+1, border_range["x"][1]-1):
+            for yOffset in range(border_range["y"][0]+1, border_range["y"][1]-1):
+                self.allLocations.append((xOffset, yOffset))
+        self.position = random.randint(self.border_range["x"][0]+1, self.border_range["x"][1]-1), random.randint(self.border_range["y"][0]+1, self.border_range["y"][1]-1)
         self.active = True
-        self.char = "*"
-    def relocate(self):
-        self.position = randint(3, SCREEN_SIZE[0]-3), randint(3, SCREEN_SIZE[1]-3)
+        self.char = "\u271c"
+    def getAvailableLocations(self, snakeBody: list[tuple]):
+        return [i for i in self.allLocations if not i in snakeBody]
+    def relocate(self, snakeBody: list[tuple]):
+        self.position = random.choice(self.getAvailableLocations(snakeBody))
         self.active = True
 
 class Snake:
     def __init__(self):
         self.score = 0
-        self.points_per_food = getPointsPerFood(SCREEN_SIZE)
-        self.body_char = "#"
-        self.body: list = [(i, SCREEN_SIZE[1]-i) for i in range(1, 7)]
+        self.points_per_food = 7
+        self.body_char = "\u2588"
         self.direction = "right"
+        self.paused = True
+        self.collisionStreak = 0
+        self.maxCollisionStreak = 2
+    def _initBody(self, head_pos: tuple):
+        self.body: list[tuple] = [head_pos]
+        for i in range(1, 9):
+            self.body.append((head_pos[0]-i, head_pos[1]))
     def consumeFood(self, foodEaten: int = 1):
         self.score += self.points_per_food * foodEaten
         playAudio("food")
@@ -49,9 +63,11 @@ class Snake:
             case "left":
                 newHeadPos = (self.body[0][0]-1, self.body[0][1])
         self.body[0] = newHeadPos
-    def gameOver(self, score: int, audioOn: bool = True):
+    def gameOver(self, score: int, useAudio: bool = True):
         if score > highscore:
-            with open("highscore.txt", "w") as f:
-                f.write(str(self.score))
-                del f
-        if audioOn: playAudio("gameover" if score <= highscore else "highscore")
+            gameConfig = readGameConfig()
+            gameConfig["topScore"] = score
+            with open(gameConfigFileName, "w+") as f:
+                f.write(json.dumps(gameConfig, indent=4))
+        if useAudio: playAudio("gameover" if score < highscore else "highscore")
+

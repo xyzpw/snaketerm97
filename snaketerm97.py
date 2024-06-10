@@ -2,27 +2,31 @@
 
 import curses
 import menuchoice
+import os
 from src._snakeCurses import *
+from src._scoreHandler import *
+from src._configHandler import *
+
+if not os.path.exists(gameConfigFileName):
+    createHighScoreFile()
+
+gameOptions = ["New game", "Top score", "Quit"]
 
 def play():
     score = curses.wrapper(startGame)
-    menuchoice.MenuSelector(["OK"], str(score)).highlight_select(center=True)
-    raise SystemExit(0)
+    topscore = getTopScore()
+    menuchoice.MenuSelector(["OK"], getGameOverText(score, score >= topscore)).highlight_select(center=False)
 
-def displayHighScores():
-    with open("highscore.txt", "r") as f:
-        highscore = str(int(f.read().strip()))
-    menuchoice.MenuSelector(["OK"], "High Scores", highscore).highlight_select(center=True)
-    raise SystemExit(0)
+def displayMainMenu():
+    playerOption = menuchoice.MenuSelector(gameOptions, "Snake").highlight_select(center=True)[0]
+    return playerOption
 
-gameOptions = ["New game", "High scores", "Quit"]
-
-playerOption = menuchoice.MenuSelector(gameOptions, "Snake!").highlight_select(center=True)[0]
-
-match playerOption[0]:
-    case 0:
-        play()
-    case 1:
-        displayHighScores()
-    case 2:
-        raise SystemExit(0)
+while True:
+    playerOption = displayMainMenu()
+    match playerOption[0]:
+        case 0:
+            play()
+        case 1:
+            displayTopScore()
+        case 2:
+            raise SystemExit(0)

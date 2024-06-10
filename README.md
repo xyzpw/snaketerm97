@@ -1,9 +1,12 @@
 # snaketerm97
-A recreation of 1997 snake using pythons curses module.
+![downloads](https://img.shields.io/github/downloads/xyzpw/snaketerm97/total)
 
-## Features
-- original snake sounds
-- high score menu
+A CLI snake game which is designed to be similar to the old nokia version developed during 1997.
+
+Some features that are similar to the 1997 snake game:
+- top score and game over sound
+- consuming food sound
+- top score menu
 
 ## Usage
 Installing requirements:
