@@ -20,6 +20,7 @@ def startGame(stdscr):
     # Initializing snake body to fit inside border
     snake._initBody((borderPosition["x"][0]+9, borderPosition["y"][1]-1))
     food = Food(borderPosition)
+    food.relocate(snake.body)
     curses.use_default_colors()
     curses.curs_set(0)
     stdscr.nodelay(True)

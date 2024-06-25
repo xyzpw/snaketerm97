@@ -23,7 +23,6 @@ class Food:
         for xOffset in range(border_range["x"][0]+1, border_range["x"][1]-1):
             for yOffset in range(border_range["y"][0]+1, border_range["y"][1]-1):
                 self.allLocations.append((xOffset, yOffset))
-        self.position = random.randint(self.border_range["x"][0]+1, self.border_range["x"][1]-1), random.randint(self.border_range["y"][0]+1, self.border_range["y"][1]-1)
         self.active = True
         self.char = "\u271c"
     def getAvailableLocations(self, snakeBody: list[tuple]):
